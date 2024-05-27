@@ -8,7 +8,9 @@ const { WhatsApp }          = require("./lib/WhatsApp");
 const { MessageMedia }      = require("whatsapp-web.js");
 const http                  = require("http");
 const fs                    = require("fs");
+const qs                    = require("qs");
 const express               = require("express");
+const axios                 = require("axios");
 const cors                  = require("cors");
 const multer                = require("multer");
 const path                  = require("path");
@@ -34,6 +36,9 @@ const multerUpload          = multer({
         }
     })
 });
+const request               = (url, data) => {
+    return axios.post(`${process.env.APIURL}/${url}`, qs.stringify(data));
+}
 
 /**
  * middlewares
@@ -107,7 +112,7 @@ app.post("/send-message", async (req, res) => {
     const message = req.body.message;
 
     try {
-        const checkNum = await helper.checkRegNumber(number);
+        const checkNum = await helper.checkRegNumber(client, number);
         if (!checkNum) {
             helper.outputJson(res, {
                 code: 422,
@@ -123,12 +128,20 @@ app.post("/send-message", async (req, res) => {
                 message: "Success",
                 result: response
             });
-        }).catch(err => {
-            helper.outputJson(res, {
-                status: true,
-                code: 400,
-                message: "Failed"
-            });
+
+            if(!response.isStatus){
+                const data = {};
+
+                data.from_me        = response.fromMe;
+                data.raw            = response;
+                data.chat_id        = response.id.id;
+                data.type           = response.type;
+                data.has_media      = response.hasMedia;
+                data.message_ack    = response.ack;
+                data.body           = response.body;
+
+                request("store_message", data);
+            }
         });
     } catch (error) {
         helper.outputJson(res, {
@@ -186,12 +199,20 @@ app.post("/send-media", multerUpload.single("file"), async (req, res) => {
                 message: "Success",
                 result: response
             });
-        }).catch(err => {
-            helper.outputJson(res, {
-                status: true,
-                code: 400,
-                message: "Failed"
-            });
+
+            if(!response.isStatus){
+                const data = {};
+
+                data.from_me        = response.fromMe;
+                data.raw            = response;
+                data.chat_id        = response.id.id;
+                data.type           = response.type;
+                data.has_media      = response.hasMedia;
+                data.message_ack    = response.ack;
+                data.body           = response.body;
+
+                request("store_message", data);
+            }
         });
     } catch (error) {
         helper.outputJson(res, {
