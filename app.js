@@ -133,6 +133,7 @@ app.post("/send-message", async (req, res) => {
                 const data = {};
 
                 data.from_me        = response.fromMe;
+                data.me             = response.from.replace("@c.us", "");
                 data.raw            = response;
                 data.chat_id        = response.id.id;
                 data.type           = response.type;
@@ -204,6 +205,7 @@ app.post("/send-media", multerUpload.single("file"), async (req, res) => {
                 const data = {};
 
                 data.from_me        = response.fromMe;
+                data.me             = response.from.replace("@c.us", "");
                 data.raw            = response;
                 data.chat_id        = response.id.id;
                 data.type           = response.type;
